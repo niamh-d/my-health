@@ -7,3 +7,8 @@ export type bmiCalcBodyStats = {
   heightInches?: number
   weight: number
 }
+
+export type bmiCalculation = {
+  bmi: number
+  category: bmiCategories
+}

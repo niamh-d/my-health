@@ -1,5 +1,6 @@
-import { round } from './basic-utils'
-import { bmiCalcBodyStats } from '../types'
+import { round } from './maths-utilities'
+import { assignBmiLabel } from './bmi-utilities'
+import { bmiCalcBodyStats, bmiCalculation } from '../types'
 
 /*
 1KG = 2.2046226218 lbs
@@ -42,17 +43,23 @@ class BMICalculator {
     return round(bmi)
   }
 
-  public calculateBmi(data: bmiCalcBodyStats): number {
+  public calculateBmi(data: bmiCalcBodyStats): bmiCalculation {
+    let bmi: number
+
     if (data.mode === 'lbs') {
       if (!data.heightFeet && !data.heightInches) {
         this.error()
       }
-      return this.calcBmiLbs(data)
+      bmi = this.calcBmiLbs(data)
     } else {
       if (!data.heightCms || !data.weight) {
         this.error()
       }
-      return this.calcBmiKgs(data)
+      bmi = this.calcBmiKgs(data)
+    }
+    return {
+      bmi,
+      category: assignBmiLabel(bmi),
     }
   }
 }

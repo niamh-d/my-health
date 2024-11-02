@@ -23,12 +23,14 @@ describe('BMI Calculator', () => {
 
   it('should calculate BMI using metric values', () => {
     // example values: height: 170 cm, weight: 70 kg
-    const bmi = calculator.calculateBmi(dataKgs)
+    const { bmi, category } = calculator.calculateBmi(dataKgs)
     expect(bmi).toBe(24.2)
+    expect(category).toBe('Normal')
   })
   it('should calculate BMI using imperial values', () => {
     // example values: height: 5 ft 3 in (= 63in), weight: 130 lbs
-    const bmi = calculator.calculateBmi(dataLbs)
+    const { bmi, category } = calculator.calculateBmi(dataLbs)
     expect(bmi).toBe(23)
+    expect(category).toBe('Normal')
   })
 })
