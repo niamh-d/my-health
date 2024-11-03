@@ -10,7 +10,10 @@
     "start": "next start",
     "lint": "eslint __tests__ app",
     "test": "jest",
-    "prepare": "husky"
+    "prepare": "husky",
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
@@ -46,6 +49,7 @@
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "^5",
     "typescript-eslint": "^8.8.1"
   },

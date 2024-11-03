@@ -1,10 +1,7 @@
+import 'dotenv/config'
 import { drizzle } from 'drizzle-orm/libsql'
 import { createClient } from '@libsql/client'
-import * as schema from './schema'
-
-import dotenv from 'dotenv'
-
-dotenv.config()
+import * as schema from './db/schema'
 
 // eslint-disable-next-line no-undef
 const url = process.env.DATABASE_URL as string
