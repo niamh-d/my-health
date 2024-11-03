@@ -1,4 +1,11 @@
-import { calculateHeightInInches, convertCmsToMeters, round } from './maths-utilities'
+import {
+  calculateHeightInInches,
+  convertCmsToMeters,
+  convertInchesToCms,
+  convertPoundsToKgs,
+  round,
+  square,
+} from './maths-utilities'
 import { assignBmiLabel } from './bmi-utilities'
 import {
   BmiCalcBodyStats,
@@ -7,28 +14,18 @@ import {
   HeightAndOrWeight,
 } from '../types'
 import { BmiCalcMode } from '../types'
-
-/*
-1KG = 2.2046226218 lbs
-1lbs = 0.45359237 kg
-1st = 14 lbs
-1cm = 0.032808398950131 ft
-1ft = 12 in
-1 ft = 30.48 cm
-*/
-
-// constants
-const bmiLbsMagicNumber = 703
-const lowerLimitBmiNormal = 18.5
-const lowerLimitBmiOverweight = 25
-const lowerLimitBmiObese = 30
+import {
+  lowerLimitBmiNormal,
+  lowerLimitBmiOverweight,
+  lowerLimitBmiObese,
+} from '../utils/constants'
 
 class BMICalculator {
-  static instance: BMICalculator
+  static instance: BMICalculator | undefined
   private defaultErrorMessage = 'Height and weight are required!'
   private mode: BmiCalcMode
-  private height: number | undefined
-  private weight: number | undefined
+  private heightMeters: number | undefined
+  private weightKgs: number | undefined
 
   private constructor(mode: BmiCalcMode) {
     this.mode = mode
@@ -47,55 +44,92 @@ class BMICalculator {
     return BMICalculator.instance
   }
 
-  private calcBmiKgs(): number {
-    return round(this.weight! / this.height! ** 2)
+  public closeInstance(): void {
+    BMICalculator.instance = undefined
   }
 
-  private calcBmiLbs(): number {
-    return round(bmiLbsMagicNumber * (this.weight! / this.height! ** 2))
+  private bmiCalc(): number {
+    return round(this.weightKgs! / square(this.heightMeters!))
   }
 
-  private convertBmiToWeightPerHeight(bmi: number, height?: number): number {
-    if (!this.height && !height) this.error('height')
+  private convertHeightToMetric(data: BmiCalcBodyStats): number {
+    return convertCmsToMeters(
+      convertInchesToCms(calculateHeightInInches(data.heightFeet!, data.heightInches)),
+    )
+  }
 
+  private convertWeightToMetric(weight: number): number {
+    return convertPoundsToKgs(weight)
+  }
+
+  private setHeight(height: number): void {
+    this.heightMeters = height
+  }
+
+  private setWeight(weight: number): void {
+    this.weightKgs = weight
+  }
+
+  private setHeightAndWeight(data: BmiCalcBodyStats): void {
     if (this.mode === 'lbs') {
-      if (height) this.height = calculateHeightInInches(height!)
-      return round(bmi * this.height! ** 2)
+      this.setHeight(this.convertHeightToMetric(data))
+      this.setWeight(this.convertWeightToMetric(data.weight!))
     } else {
-      if (height) this.height = convertCmsToMeters(height!)
-      return round(bmi * this.height! ** 2)
+      this.setHeight(convertCmsToMeters(data.heightCms!))
+      this.setWeight(data.weight!)
     }
   }
 
-  public calculateWeightPerCategoryPerHeight(height?: number): WeightPerCategoryObject {
-    return {
-      normal: this.convertBmiToWeightPerHeight(lowerLimitBmiNormal, height),
-      overweight: this.convertBmiToWeightPerHeight(lowerLimitBmiOverweight, height),
-      obese: this.convertBmiToWeightPerHeight(lowerLimitBmiObese, height),
-    }
+  private validateDataObject(data: BmiCalcBodyStats): void {
+    if (!data.weight || (!data.heightCms && !data.heightFeet)) this.error()
   }
 
   public calculateBmi(data: BmiCalcBodyStats): BmiCalculation {
-    if (!data.weight) {
-      this.error('weight')
-    } else this.weight = data.weight
+    this.validateDataObject(data)
+    this.setHeightAndWeight(data)
 
-    let bmi: number
-
-    if (data.mode === 'lbs') {
-      if (!data.heightFeet) this.error('height')
-
-      this.height = calculateHeightInInches(data.heightFeet!, data.heightInches)
-      bmi = this.calcBmiLbs()
-    } else {
-      if (!data.heightCms) this.error('height')
-      this.height = convertCmsToMeters(data.heightCms!)
-      bmi = this.calcBmiKgs()
-    }
+    const bmi = this.bmiCalc()
 
     return {
       bmi,
       category: assignBmiLabel(bmi),
+    }
+  }
+
+  private convertBmiToWeightPerHeight(
+    bmi: number,
+    heightValueOne?: number,
+    heightValueTwo?: number,
+  ): number {
+    if (!this.heightMeters && !heightValueOne) this.error('height')
+
+    if (heightValueOne) {
+      if (this.mode === 'lbs') {
+        this.setHeight(
+          this.convertHeightToMetric({
+            heightFeet: heightValueOne!,
+            heightInches: heightValueTwo,
+          }),
+        )
+      } else {
+        this.setHeight(convertCmsToMeters(heightValueOne))
+      }
+    }
+    return round(bmi * square(this.heightMeters!))
+  }
+
+  public calculateWeightPerCategoryPerHeight(
+    heightValueOne?: number,
+    heightValueTwo?: number,
+  ): WeightPerCategoryObject {
+    return {
+      Normal: this.convertBmiToWeightPerHeight(lowerLimitBmiNormal, heightValueOne, heightValueTwo),
+      Overweight: this.convertBmiToWeightPerHeight(
+        lowerLimitBmiOverweight,
+        heightValueOne,
+        heightValueTwo,
+      ),
+      Obese: this.convertBmiToWeightPerHeight(lowerLimitBmiObese, heightValueOne, heightValueTwo),
     }
   }
 }
