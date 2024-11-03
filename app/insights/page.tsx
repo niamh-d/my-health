@@ -1,12 +1,25 @@
 import { getUser } from '@/lib/actions/users.actions'
 import { getWeight } from '@/lib/actions/weight.actions'
 import { WeightDbObject } from '@/types/db/db-objects'
+import BMICalculator from '@/utils/bmi-calculator'
 
 // eslint-disable-next-line
 export default async function Insights() {
   const dummyUserId = 1
   const user = await getUser(dummyUserId)
   const weightArray = (await getWeight(dummyUserId)) as WeightDbObject[]
+  const calculator = BMICalculator.getInstance()
+  const userWeightDataArr = weightArray.map((weight) => {
+    return {
+      date: weight.date,
+      weightKgs: weight.weightKgs,
+      bmi: calculator.calculateBmi({
+        mode: 'kgs',
+        weight: weight.weightKgs,
+        heightCms: user.heightCms!,
+      }),
+    }
+  })
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -18,8 +31,11 @@ export default async function Insights() {
         </p>
         <h2>BMI</h2>
         <ul>
-          {weightArray.map((weight) => (
-            <li key={weight.date}>{weight.weightKgs}</li>
+          {userWeightDataArr.map((entry) => (
+            <li key={entry.date}>
+              Date: {entry.date} | Weight: {entry.weightKgs} | BMI: {entry.bmi.bmi} | Category:
+              {entry.bmi.category}
+            </li>
           ))}
         </ul>
       </main>
