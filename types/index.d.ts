@@ -1,14 +1,20 @@
-export type bmiCalcMode = 'kgs' | 'lbs'
+import { BmiCategories, BmiMainCategories } from '../utils/constants'
 
-export type bmiCalcBodyStats = {
-  mode: bmiCalcMode
+export type BmiCalcMode = 'kgs' | 'lbs'
+export type HeightAndOrWeight = 'height' | 'weight' | 'both'
+
+export type BmiCalcBodyStats = {
   heightCms?: number
   heightFeet?: number
   heightInches?: number
-  weight: number
+  weight?: number
 }
 
-export type bmiCalculation = {
+export type BmiCalculation = {
   bmi: number
-  category: bmiCategories
+  category: BmiCategories
+}
+
+export type WeightPerCategoryObject = {
+  [key in BmiMainCategories]: number
 }
