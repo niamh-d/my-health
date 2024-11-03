@@ -1,7 +1,13 @@
 export type UserDbObject = {
   userId: number
-  name: string
+  firstName: string
   username: string
   email: string
   heightCms: number | null
+}
+
+export type WeightDbObject = {
+  userId: number
+  weightKgs: number
+  date: string
 }

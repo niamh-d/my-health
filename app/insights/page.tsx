@@ -1,19 +1,27 @@
 import { getUser } from '@/lib/actions/users.actions'
+import { getWeight } from '@/lib/actions/weight.actions'
+import { WeightDbObject } from '@/types/db/db-objects'
 
 // eslint-disable-next-line
 export default async function Insights() {
   const dummyUserId = 1
   const user = await getUser(dummyUserId)
+  const weightArray = (await getWeight(dummyUserId)) as WeightDbObject[]
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
         <h1>Insights</h1>
         <p>
-          Name: {user.name} | Username: {user.username} | Email: {user.email} | Height:{' '}
+          Name: {user.firstName} | Username: {user.username} | Email: {user.email} | Height:{' '}
           {user.heightCms}
         </p>
         <h2>BMI</h2>
+        <ul>
+          {weightArray.map((weight) => (
+            <li key={weight.date}>{weight.weightKgs}</li>
+          ))}
+        </ul>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
         &copy; 2024 niamh
