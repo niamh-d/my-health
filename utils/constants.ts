@@ -1,4 +1,4 @@
-export enum bmiCategories {
+export enum BmiCategories {
   SU = 'Severely Underweight',
   ModU = 'Moderately Underweight',
   MildU = 'Mildly Underweight',

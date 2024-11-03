@@ -1,6 +1,12 @@
-import { round } from './maths-utilities'
+import { calculateHeightInInches, convertCmsToMeters, round } from './maths-utilities'
 import { assignBmiLabel } from './bmi-utilities'
-import { bmiCalcBodyStats, bmiCalculation } from '../types'
+import {
+  BmiCalcBodyStats,
+  BmiCalculation,
+  WeightPerCategoryObject,
+  HeightAndOrWeight,
+} from '../types'
+import { BmiCalcMode } from '../types'
 
 /*
 1KG = 2.2046226218 lbs
@@ -13,50 +19,80 @@ import { bmiCalcBodyStats, bmiCalculation } from '../types'
 
 // constants
 const bmiLbsMagicNumber = 703
-const inchesInFeet = 12
+const lowerLimitBmiNormal = 18.5
+const lowerLimitBmiOverweight = 25
+const lowerLimitBmiObese = 30
 
 class BMICalculator {
   static instance: BMICalculator
-  private errorMessage = 'Height and weight are required!'
+  private defaultErrorMessage = 'Height and weight are required!'
+  private mode: BmiCalcMode
+  private height: number | undefined
+  private weight: number | undefined
 
-  private error(): void {
-    throw new Error(this.errorMessage)
+  private constructor(mode: BmiCalcMode) {
+    this.mode = mode
   }
 
-  public static getInstance(): BMICalculator {
+  private error(keyWord: HeightAndOrWeight = 'both'): void {
+    if (keyWord !== 'both') throw new Error(`${keyWord.toUpperCase()} is required!`)
+
+    throw new Error(this.defaultErrorMessage)
+  }
+
+  public static getInstance(mode: BmiCalcMode = 'kgs'): BMICalculator {
     if (!BMICalculator.instance) {
-      BMICalculator.instance = new BMICalculator()
+      BMICalculator.instance = new BMICalculator(mode)
     }
     return BMICalculator.instance
   }
-  private calcBmiKgs(data: bmiCalcBodyStats): number {
-    const { heightCms, weight } = data
-    const heightMeters = heightCms! / 100
-    const bmi = weight / (heightMeters * heightMeters)
-    return round(bmi)
+
+  private calcBmiKgs(): number {
+    return round(this.weight! / this.height! ** 2)
   }
 
-  private calcBmiLbs(data: bmiCalcBodyStats): number {
-    const { heightFeet, heightInches, weight } = data
-    const height = heightFeet! * inchesInFeet + heightInches!
-    const bmi = bmiLbsMagicNumber * (weight / (height * height))
-    return round(bmi)
+  private calcBmiLbs(): number {
+    return round(bmiLbsMagicNumber * (this.weight! / this.height! ** 2))
   }
 
-  public calculateBmi(data: bmiCalcBodyStats): bmiCalculation {
+  private convertBmiToWeightPerHeight(bmi: number, height?: number): number {
+    if (!this.height && !height) this.error('height')
+
+    if (this.mode === 'lbs') {
+      if (height) this.height = calculateHeightInInches(height!)
+      return round(bmi * this.height! ** 2)
+    } else {
+      if (height) this.height = convertCmsToMeters(height!)
+      return round(bmi * this.height! ** 2)
+    }
+  }
+
+  public calculateWeightPerCategoryPerHeight(height?: number): WeightPerCategoryObject {
+    return {
+      normal: this.convertBmiToWeightPerHeight(lowerLimitBmiNormal, height),
+      overweight: this.convertBmiToWeightPerHeight(lowerLimitBmiOverweight, height),
+      obese: this.convertBmiToWeightPerHeight(lowerLimitBmiObese, height),
+    }
+  }
+
+  public calculateBmi(data: BmiCalcBodyStats): BmiCalculation {
+    if (!data.weight) {
+      this.error('weight')
+    } else this.weight = data.weight
+
     let bmi: number
 
     if (data.mode === 'lbs') {
-      if (!data.heightFeet && !data.heightInches) {
-        this.error()
-      }
-      bmi = this.calcBmiLbs(data)
+      if (!data.heightFeet) this.error('height')
+
+      this.height = calculateHeightInInches(data.heightFeet!, data.heightInches)
+      bmi = this.calcBmiLbs()
     } else {
-      if (!data.heightCms || !data.weight) {
-        this.error()
-      }
-      bmi = this.calcBmiKgs(data)
+      if (!data.heightCms) this.error('height')
+      this.height = convertCmsToMeters(data.heightCms!)
+      bmi = this.calcBmiKgs()
     }
+
     return {
       bmi,
       category: assignBmiLabel(bmi),
