@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import Home from '@/app/page'
 
-xdescribe('Home', () => {
+describe('Home', () => {
   it('should have Hello text', () => {
     render(<Home />)
     const helloText = screen.getByText(/hello/i)
