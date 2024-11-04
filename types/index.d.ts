@@ -29,4 +29,5 @@ type WeightObject = {
 
 export type UserAndWeight = UserDbObject & {
   weightHistory: WeightObject[]
+  weightBands: WeightPerCategoryObject
 }

@@ -14,6 +14,34 @@ export default async function Insights() {
           Name: {data.firstName} | Username: {data.username} | Email: {data.email} | Height:{' '}
           {data.heightCms}
         </p>
+        <h2>BMI</h2>
+        <div className="flex gap-3">
+          <ul>
+            <li className="font-semibold">Category</li>
+            <li>Underweight:</li>
+            <li>Healthy Weight:</li>
+            <li>Overweight:</li>
+            <li>Obese:</li>
+          </ul>
+          <ul>
+            <li className="font-semibold">Weight</li>
+            <li>Under {data.weightBands.Normal}</li>
+            <li>
+              {data.weightBands.Normal}–{data.weightBands.Overweight}
+            </li>
+            <li>
+              {data.weightBands.Overweight}–{data.weightBands.Obese}
+            </li>
+            <li>Over {data.weightBands.Obese}</li>
+          </ul>
+          <ul>
+            <li className="font-semibold">BMI</li>
+            <li>Under 18.5</li>
+            <li>18.5-24.9</li>
+            <li>25-29.9</li>
+            <li>Over 30</li>
+          </ul>
+        </div>
         <h2>Weight History</h2>
         <ul>
           {data.weightHistory.map((entry) => (

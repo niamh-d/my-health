@@ -7,6 +7,7 @@ export async function getUserAndWeight(userId: number): Promise<UserAndWeight> {
   const user = await getUser(userId)
   const weightArray = await getWeight(userId)
   const calculator = BMICalculator.getInstance()
+  const weightBands = calculator.calculateWeightPerCategoryPerHeight(user.heightCms!)
   const weightHistory = weightArray.map((weight) => {
     return {
       date: weight.date,
@@ -17,5 +18,5 @@ export async function getUserAndWeight(userId: number): Promise<UserAndWeight> {
       }),
     }
   })
-  return { ...user, weightHistory }
+  return { ...user, weightHistory, weightBands }
 }
